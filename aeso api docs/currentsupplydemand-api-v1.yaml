@@ -1,0 +1,106 @@
+openapi: 3.0.1
+info:
+  title: Current Supply Demand
+  description: Get Current Supply Demand Report
+  version: v1
+servers:
+  - url: https://apimgw.aeso.ca/public/currentsupplydemand-api/v1
+  - url: https://gateway-apim.aeso.ca/public/currentsupplydemand-api/v1
+paths:
+  /csd/generation/assets/current:
+    get:
+      tags:
+        - Current Supply Demand
+      summary: Fetch the latest generation data for all AIES assets greater than 5 MW.
+      description: 'Users have option to pass upto 20, comma seperated, specific Asset ID(s) to fetch data for those specific asset(s). If the AssetID is incorrect or retired then no data is returned for that AssetID.'
+      operationId: getCSDReportByAsset
+      parameters:
+        - name: assetIds
+          in: query
+          description: This parameter can contain up to 20 comma-separated Asset IDs.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CSDAssetGenerationReport'
+              example:
+                last_updated_datetime_utc: '2022-03-18T10:20:00.0000000+00:00'
+                last_updated_datetime_mpt: '2022-03-18T16:20:00.0000000+00:00'
+                asset_list:
+                  - asset: string
+                    fuel_type: string
+                    sub_fuel_type: string
+                    maximum_capability: 0
+                    net_generation: 0
+                    dispatched_contingency_reserve: 0
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+        '405':
+          description: Invalid method
+        '500':
+          description: Internal server error
+        '503':
+          description: Service unavailable
+components:
+  schemas:
+    CSDAssetGenerationReport:
+      type: object
+      properties:
+        last_updated_datetime_utc:
+          type: string
+          description: The timestamp of when the data was last updated in UTC
+          example: '2022-03-18 10:20'
+        last_updated_datetime_mpt:
+          type: string
+          description: The timestamp of when the data was last updated in MPT
+          example: '2022-03-18 16:20'
+        asset_list:
+          type: array
+          items:
+            $ref: '#/components/schemas/CSDAssetGenerationTypeVO'
+    CSDAssetGenerationTypeVO:
+      type: object
+      properties:
+        asset:
+          type: string
+          description: Asset's unique short name defined by 3 or 4-digit alphanumeric code. A pool asset is registered to a pool participant..
+        fuel_type:
+          type: string
+          description: Fuel Type of the asset.
+        sub_fuel_type:
+          type: string
+          description: Sub-fuel Type of asset. Only applicable for assets with fuel type = Gas. The field will be empty for other assets.
+        maximum_capability:
+          type: integer
+          description: "Maximum quantity (in MW) that the generating asset is physically capable of providing under optimal operating conditions for the asset while complying with all applicable ISO rules and terms and conditions of the ISO tariff.\r\nNote that the Maximum Capability (MC) of coal assets is net of auxiliary load."
+          format: int32
+        net_generation:
+          type: integer
+          description: Net Generation (Gross Generation minus Asset service) in MW pertaining to the asset.
+          format: int32
+        dispatched_contingency_reserve:
+          type: integer
+          description: Dispatched (and Accepted) Contingency Reserve (in MW) pertaining to the asset.
+          format: int32
+  securitySchemes:
+    apiKeyHeader:
+      type: apiKey
+      name: API-KEY
+      in: header
+    apiKeyQuery:
+      type: apiKey
+      name: subscription-key
+      in: query
+security:
+  - apiKeyHeader: [ ]
+  - apiKeyQuery: [ ]

@@ -1,0 +1,138 @@
+openapi: 3.0.1
+info:
+  title: System Marginal Price Report
+  description: System Marginal Price report data
+  version: v1.1
+servers:
+  - url: https://apimgw.aeso.ca/public/systemmarginalprice-api/v1.1
+  - url: https://gateway-apim.aeso.ca/public/systemmarginalprice-api/v1.1
+paths:
+  /price/systemMarginalPrice:
+    get:
+      tags:
+        - System Marginal Price Report
+      summary: Fetch system marginal price report for a given date range
+      description: "Fetch system marginal price report for the date range: startDate (yyyy-MM-dd) to endDate (yyyy-MM-dd). The endDate is optional. If omitted, fetched data will include all data up to the last completed SMP value for the startDate. The API will return a maximum of 4,392 hours (i.e. 183 days).\n\n\n**Please note:** This API does not provide the active System Marginal Price (SMP). To obtain the active SMP, please use the 'Fetch the active system marginal price' API in the lefthand pane."
+      operationId: getSystemMarginalPriceReportForDateRange
+      parameters:
+        - name: startDate
+          in: query
+          description: 'Any date between 2000-01-01 and current date. (format: yyyy-MM-dd).)'
+          required: true
+          schema:
+            pattern: '^\d{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$'
+            type: string
+        - name: endDate
+          in: query
+          description: 'Any date up to current date but after startDate. If left blank, only data for startDate will be returned. (format: yyyy-MM-dd).)'
+          schema:
+            pattern: '^\d{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$'
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemMarginalPriceDataReport'
+              example:
+                System Marginal Price Report:
+                  - begin_datetime_utc: string
+                    end_datetime_utc: string
+                    begin_datetime_mpt: string
+                    end_datetime_mpt: string
+                    system_marginal_price: 0
+                    volume: string
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+        '405':
+          description: Invalid method
+        '500':
+          description: Internal server error
+        '503':
+          description: Service unavailable
+  /price/systemMarginalPrice/current:
+    get:
+      tags:
+        - System Marginal Price Report
+      summary: Fetch the active system marginal price.
+      description: Fetch the active system marginal price.
+      operationId: getCurrentSystemMarginalPriceReport
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemMarginalPriceDataReport'
+              example:
+                System Marginal Price Report:
+                  - begin_datetime_utc: string
+                    end_datetime_utc: string
+                    begin_datetime_mpt: string
+                    end_datetime_mpt: string
+                    system_marginal_price: 0
+                    volume: string
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+        '405':
+          description: Invalid method
+        '500':
+          description: Internal server error
+        '503':
+          description: Service unavailable
+components:
+  schemas:
+    SystemMarginalPriceDataReport:
+      type: object
+      properties:
+        System Marginal Price Report:
+          type: array
+          items:
+            $ref: '#/components/schemas/SystemMarginalPriceDataVO'
+    SystemMarginalPriceDataVO:
+      type: object
+      properties:
+        begin_datetime_utc:
+          type: string
+          description: 'The begin timestamp of when the block set the SMP, in UTC.'
+        end_datetime_utc:
+          type: string
+          description: 'The end timestamp of when the block set the SMP, in UTC.'
+        begin_datetime_mpt:
+          type: string
+          description: 'The begin timestamp of when the block set the SMP, in MPT (Mountain Prevailing Time).'
+        end_datetime_mpt:
+          type: string
+          description: 'The end timestamp of when the block set the SMP, in MPT (Mountain Prevailing Time).'
+        system_marginal_price:
+          type: number
+          description: 'The offered price of the block that set the SMP, in CAD.'
+          format: double
+        volume:
+          type: string
+          description: The Available MW for the block at the time the block set the SMP.
+  securitySchemes:
+    apiKeyHeader:
+      type: apiKey
+      name: API-KEY
+      in: header
+    apiKeyQuery:
+      type: apiKey
+      name: subscription-key
+      in: query
+security:
+  - apiKeyHeader: [ ]
+  - apiKeyQuery: [ ]

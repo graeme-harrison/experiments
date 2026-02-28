@@ -1,0 +1,142 @@
+openapi: 3.0.1
+info:
+  title: Energy Merit Order Report
+  description: Fetch Energy Merit Order snapshot data
+  version: v1
+servers:
+  - url: https://apimgw.aeso.ca/public/energymeritorder-api/v1
+  - url: https://gateway-apim.aeso.ca/public/energymeritorder-api/v1
+paths:
+  /meritOrder/energy:
+    get:
+      tags:
+        - Energy Merit Order Report
+      summary: Fetch Energy Merit Order snapshot data for a given date that is 60 days prior to current date.
+      description: "Fetch Energy Merit Order snapshot data for Date(startDate (yyyy-MM-dd)) \n\nThe EMMO snapshot data is available 60 days after the date of the snapshot, first available from September 1, 2009. \n\nThe data from 1-Sep-2009 to 1-Sep-2014 is the Merit Order at the 30th min. of the settlement interval. \n\nThe data after 1-Sep-2014 is the last Merit Order of the settlement interval.\r\n"
+      operationId: getMeritOrderReport
+      parameters:
+        - name: startDate
+          in: query
+          description: 'Any date between 2009-09-01 and 60 days prior to current date (format: yyyy-MM-dd).'
+          required: true
+          schema:
+            pattern: '^\d{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$'
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnergyMeritOrderReport'
+              example:
+                data:
+                  - begin_dateTime_utc: string
+                    begin_dateTime_mpt: string
+                    energy_blocks:
+                      - import_or_export: string
+                        asset_ID: string
+                        block_number: 0
+                        block_price: 0
+                        from_MW: 0
+                        to_MW: 0
+                        block_size: 0
+                        available_MW: 0
+                        dispatched?: string
+                        dispatched_MW: 0
+                        flexible?: string
+                        offer_control: string
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+        '405':
+          description: Invalid method
+        '500':
+          description: Internal server error
+        '503':
+          description: Service unavailable
+components:
+  schemas:
+    EnergyMeritOrderReport:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/MeritOrderData'
+    MeritOrderData:
+      type: object
+      properties:
+        begin_dateTime_utc:
+          type: string
+          description: 'Beginning of the settlement hour that the Energy Market Merit Order applies to, in Coordinated Universal Time (UTC) time'
+        begin_dateTime_mpt:
+          type: string
+          description: 'Beginning of the settlement hour that the Energy Market Merit Order applies to, in Mountain prevailing time'
+        energy_blocks:
+          type: array
+          items:
+            $ref: '#/components/schemas/EnergyBlocks'
+    EnergyBlocks:
+      type: object
+      properties:
+        import_or_export:
+          type: string
+          description: 'Import/Export Identifier, either ''I'' for Import or ''E'' for Export'
+        asset_ID:
+          type: string
+          description: Asset's unique short name defined by 3 or 4-digit alphanumeric code. A pool asset is registered to a pool participant.
+        block_number:
+          type: integer
+          description: ' Block Number from 0 to 6'
+          format: int32
+        block_price:
+          type: number
+          description: Block Offer Price (in $/MWh)
+          format: double
+        from_MW:
+          type: integer
+          description: Prior Block's cumulative Megawatt (in MW)
+          format: int32
+        to_MW:
+          type: integer
+          description: Current Block's cumulative Megawatt (in MW)
+          format: int32
+        block_size:
+          type: integer
+          description: Block Size (MW)
+          format: int32
+        available_MW:
+          type: integer
+          description: Available Megawatts for the System Controller to Dispatch (in MW)
+          format: int32
+        dispatched?:
+          type: string
+          description: Dispatched MW indicator - either 'Y' for Yes or 'N' for No
+        dispatched_MW:
+          type: integer
+          description: Dispatched Megawatts (in MW)
+          format: int32
+        flexible?:
+          type: string
+          description: 'Flexible block indicator -''Y'' indicates that the System Controller is able to partially dispatch the block, ''N'' indicates they can not'
+        offer_control:
+          type: string
+          description: Offer Control - Offer control parties separated by a semi-colon
+  securitySchemes:
+    apiKeyHeader:
+      type: apiKey
+      name: API-KEY
+      in: header
+    apiKeyQuery:
+      type: apiKey
+      name: subscription-key
+      in: query
+security:
+  - apiKeyHeader: [ ]
+  - apiKeyQuery: [ ]

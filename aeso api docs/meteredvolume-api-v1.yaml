@@ -1,0 +1,119 @@
+openapi: 3.0.1
+info:
+  title: Metered Volume Report
+  description: Fetch AIES Metered Volume data
+  version: v1
+servers:
+  - url: https://apimgw.aeso.ca/public/meteredvolume-api/v1
+  - url: https://gateway-apim.aeso.ca/public/meteredvolume-api/v1
+paths:
+  /meteredvolume/details:
+    get:
+      tags:
+        - Metered Volume Report
+      summary: Fetch AIES Metered Volume data
+      description: "Fetch AIES Metered Volume for a given date or date range. \n\nIf only the startDate is provided, data will only be provided for that day. \r\n\n\nOptional parameters asset_ID and pool_participant_ID can be provided to limit the data returned. The asset_ID and pool_participant_ID parameters are comma separated lists. At most, one of the two parameters can be passed in an API call.\r\n\n\nIf no asset_ID or pool_participant_ID is provided, then the API with fetch data for all assets, which will be limited to 16 days in a single fetch.\r\n\n\nIf asset_ID or pool_participant_ID is provided, the API with fetch data specific to those parameters. The results will be limited to approximately 100K records in a single fetch. For example, a single asset will return 24 records for 1 day. Please restrict your query accordingly. \n\n"
+      operationId: getMeteredVolumeReport
+      parameters:
+        - name: startDate
+          in: query
+          description: 'Any date between 2000-01-01 and current date (format: yyyy-MM-dd).'
+          required: true
+          schema:
+            pattern: '^\d{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$'
+            type: string
+        - name: endDate
+          in: query
+          description: 'Any date up to current date but after startDate. If left blank, only data for startDate will be returned (format: yyyy-MM-dd).'
+          schema:
+            pattern: '^\d{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$'
+            type: string
+        - name: asset_ID
+          in: query
+          description: This parameter can contain up to 20 comma-separated Asset IDs.
+          schema:
+            type: string
+        - name: pool_participant_ID
+          in: query
+          description: This parameter can contain up to 20 comma-separated Pool Participant IDs.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeteredVolumeReport'
+              example:
+                pool_participant_ID: string
+                asset_list:
+                  - asset_ID: string
+                    asset_class: string
+                    metered_volume_list:
+                      - begin_date_utc: string
+                        begin_date_mpt: string
+                        metered_volume: string
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+        '405':
+          description: Invalid method
+        '500':
+          description: Internal server error
+        '503':
+          description: Service unavailable
+components:
+  schemas:
+    AssetList:
+      type: object
+      properties:
+        asset_ID:
+          type: string
+          description: Asset's unique short name defined by 3 or 4-digit alphanumeric code. A pool asset is registered to a pool participant.
+        asset_class:
+          type: string
+          description: Asset classification for Sink and Source assets.
+        metered_volume_list:
+          type: array
+          items:
+            $ref: '#/components/schemas/MeteredVolumes'
+    MeteredVolumes:
+      type: object
+      properties:
+        begin_date_utc:
+          type: string
+          description: 'The begin timestamp of the settlement hour, in UTC.'
+        begin_date_mpt:
+          type: string
+          description: 'The begin timestamp of the settlement hour, in MPT (Mountain Prevailing Time).'
+        metered_volume:
+          type: string
+          description: Metered Volume of the asset in the settlement hour (in MW).
+    MeteredVolumeReport:
+      type: object
+      properties:
+        pool_participant_ID:
+          type: string
+          description: 'Pool Participant''s unique short name defined by 3 or 4-digit alphanumeric code. A pool participant is a market participant who is registered to transact electric energy. '
+        asset_list:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssetList'
+  securitySchemes:
+    apiKeyHeader:
+      type: apiKey
+      name: API-KEY
+      in: header
+    apiKeyQuery:
+      type: apiKey
+      name: subscription-key
+      in: query
+security:
+  - apiKeyHeader: [ ]
+  - apiKeyQuery: [ ]

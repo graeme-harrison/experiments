@@ -1,0 +1,119 @@
+openapi: 3.0.1
+info:
+  title: AIES Gen Capacity API
+  description: AIES generation capacity and outages submitted to the AESO.
+  version: v1
+servers:
+  - url: https://apimgw.aeso.ca/public/aiesgencapacity-api/v1
+  - url: https://gateway-apim.aeso.ca/public/aiesgencapacity-api/v1
+paths:
+  /AIESGenCapacity:
+    get:
+      summary: Fetch AIES generation capacity and outages
+      description: Fetch AIES generation capacity and outages grouped by fuel and sub-fuel type for a date range. The data is available from 1-Jan-2011 to 24 months in future. Note that the API cannot fetch more than 31 days of data in a single request.
+      operationId: getAIESControlReport
+      parameters:
+        - name: startDate
+          in: query
+          description: 'Any date between 2011-01-01 and the end of the 24th month from current date in future. (format: yyyy-MM-dd)'
+          required: true
+          schema:
+            pattern: '^\d{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$'
+            type: string
+        - name: endDate
+          in: query
+          description: 'Any date after startDate up to the 1st of the 25th month from current date in future. If left blank, only data for startDate will be returned. (format: yyyy-MM-dd)'
+          schema:
+            pattern: '^\d{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$'
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AIESReportVO'
+              example:
+                fuel_type: string
+                sub_fuel_type: string
+                Hours:
+                  - begin_datetime_utc: string
+                    begin_datetime_mpt: string
+                    outage_grouping:
+                      MC: 0
+                      MBO OUT: 0
+                      OP OUT: 0
+                      AC: 0
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+        '405':
+          description: Invalid method
+        '500':
+          description: Internal server error
+        '503':
+          description: Service unavailable
+components:
+  schemas:
+    AIESHourlyOutageVO:
+      type: object
+      properties:
+        begin_datetime_utc:
+          type: string
+          description: 'The begin timestamp of the settlement hour, in UTC.'
+          format: date-time
+        begin_datetime_mpt:
+          type: string
+          description: 'The begin timestamp of the settlement hour, in MPT (Mountain Prevailing Time).'
+          format: date-time
+        outage_grouping:
+          $ref: '#/components/schemas/AIESOutageGroupingVO'
+    AIESOutageGroupingVO:
+      type: object
+      properties:
+        MC:
+          type: integer
+          description: Sum of Maximum Capability volume of all the assets in the fuel/ sub-fuel type for the hour (in MW).
+          format: int32
+        MBO OUT:
+          type: integer
+          description: Sum of Mothball (MBO) outage volume of all the assets in the fuel/ sub-fuel type for the hour (in MW).
+          format: int32
+        OP OUT:
+          type: integer
+          description: Sum of Operational (OP) outage volume of all the assets in the fuel/ sub-fuel type for the hour (in MW).
+          format: int32
+        AC:
+          type: integer
+          description: Sum of Available Capability volume of all the assets in the fuel/ sub-fuel type for the hour (in MW) i.e. MC - (MBO OUT + OP OUT).
+          format: int32
+    AIESReportVO:
+      type: object
+      properties:
+        fuel_type:
+          type: string
+          description: Name of the fuel type grouping for the assets.
+        sub_fuel_type:
+          type: string
+          description: Name of the sub-fuel type grouping for the assets.
+        Hours:
+          type: array
+          items:
+            $ref: '#/components/schemas/AIESHourlyOutageVO'
+  securitySchemes:
+    apiKeyHeader:
+      type: apiKey
+      name: API-KEY
+      in: header
+    apiKeyQuery:
+      type: apiKey
+      name: subscription-key
+      in: query
+security:
+  - apiKeyHeader: [ ]
+  - apiKeyQuery: [ ]

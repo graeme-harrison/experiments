@@ -1,0 +1,112 @@
+openapi: 3.0.1
+info:
+  title: Unit Commitment Data API
+  description: Get Unit Commitment Directives report data
+  version: v2
+servers:
+  - url: https://apimgw.aeso.ca/public/unitcommitmentdata-api/v2
+  - url: https://gateway-apim.aeso.ca/public/unitcommitmentdata-api/v2
+paths:
+  /unitCommitment:
+    get:
+      tags:
+        - Unit Commitment Data API
+      summary: Fetch Unit Commitment Directive Data
+      description: Fetch generating unit commitment directive data for a date range
+      operationId: getUnitCommitmentDataReportV11ForDateRange
+      parameters:
+        - name: startDate
+          in: query
+          description: 'Unit Commitment End Date From. Any date from 2024-07-01. Default to current time if left blank (format: yyyy-MM-dd).)'
+          schema:
+            pattern: '^\d{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$'
+            type: string
+        - name: endDate
+          in: query
+          description: 'Unit Commitment End Date To. Any date from 2024-07-01 but after startDate. If left blank, return all the data from startDate. (format: yyyy-MM-dd).)'
+          schema:
+            pattern: '^\d{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$'
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnitCommitmentDataV2Report'
+              example:
+                unit_commitment:
+                  - asset_ID: string
+                    issued_time_utc: string
+                    issued_time_mpt: string
+                    begin_time_utc: string
+                    begin_time_mpt: string
+                    operation_start_time_utc: string
+                    operation_start_time_mpt: string
+                    operation_end_time_utc: string
+                    operation_end_time_mpt: string
+        '400':
+          description: Bad Request
+        '500':
+          description: Internal server error
+        '503':
+          description: Service unavailable
+        '401':
+          description: Unauthorized
+        '405':
+          description: Invalid method
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+components:
+  schemas:
+    UnitCommitmentDataV2Report:
+      type: object
+      properties:
+        unit_commitment:
+          type: array
+          items:
+            $ref: '#/components/schemas/UnitCommitmentDataV2VO'
+    UnitCommitmentDataV2VO:
+      type: object
+      properties:
+        asset_ID:
+          type: string
+          description: Pool asset ID
+        issued_time_utc:
+          type: string
+          description: 'The time when the pool participant is issued the directive, in UTC.'
+        issued_time_mpt:
+          type: string
+          description: 'The time when the pool participant is issued the directive, in MPT.'
+        begin_time_utc:
+          type: string
+          description: 'The effective time of the directive when the pool participant is expected to begin responding to the directive, in UTC.'
+        begin_time_mpt:
+          type: string
+          description: 'The effective time of the directive when the pool participant is expected to begin responding to the directive, in MPT.'
+        operation_start_time_utc:
+          type: string
+          description: 'The time when the asset is instructed to synchronize to the interconnected electric system in response to the directive, in UTC.'
+        operation_start_time_mpt:
+          type: string
+          description: 'The time when the asset is instructed to synchronize to the interconnected electric system in response to the directive, in MPT.'
+        operation_end_time_utc:
+          type: string
+          description: 'The time when the asset is no longer required to operate in response to the directive, in UTC.'
+        operation_end_time_mpt:
+          type: string
+          description: 'The time when the asset is no longer required to operate in response to the directive, in MPT.'
+  securitySchemes:
+    apiKeyHeader:
+      type: apiKey
+      name: API-KEY
+      in: header
+    apiKeyQuery:
+      type: apiKey
+      name: subscription-key
+      in: query
+security:
+  - apiKeyHeader: [ ]
+  - apiKeyQuery: [ ]

@@ -1,0 +1,89 @@
+openapi: 3.0.1
+info:
+  title: Actual Forecast Report
+  description: Get Actual Forecast report data for date range.
+  version: v1
+servers:
+  - url: https://apimgw.aeso.ca/public/actualforecast-api/v1
+  - url: https://gateway-apim.aeso.ca/public/actualforecast-api/v1
+paths:
+  /load/albertaInternalLoad:
+    get:
+      tags:
+        - Actual Forecast Report
+      summary: Fetch Actual Forecast data for a day or date range.
+      description: Fetch Actual Forecast data for a day or date range
+      operationId: getActualForecastReport
+      parameters:
+        - name: startDate
+          in: query
+          description: 'Any date between 2000-01-01 and current date. (format: yyyy-MM-dd).'
+          required: true
+          schema:
+            pattern: '^\d{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$'
+            type: string
+        - name: endDate
+          in: query
+          description: 'Any date up to current date but after startDate. If left blank, only data for startDate will be returned. (format: yyyy-MM-dd).'
+          schema:
+            pattern: '^\d{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$'
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActualForecastAILReport'
+              example:
+                Actual Forecast Report:
+                  - begin_datetime_utc: string
+                    begin_datetime_mpt: string
+                    alberta_internal_load: string
+                    forecast_alberta_internal_load: string
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+        '405':
+          description: Invalid method
+        '500':
+          description: Internal server error
+        '503':
+          description: Service unavailable
+components:
+  schemas:
+    ActualForecastAILReport:
+      type: object
+      properties:
+        Actual Forecast Report:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActualForecastAILVO'
+    ActualForecastAILVO:
+      type: object
+      properties:
+        begin_datetime_utc:
+          type: string
+        begin_datetime_mpt:
+          type: string
+        alberta_internal_load:
+          type: string
+        forecast_alberta_internal_load:
+          type: string
+  securitySchemes:
+    apiKeyHeader:
+      type: apiKey
+      name: API-KEY
+      in: header
+    apiKeyQuery:
+      type: apiKey
+      name: subscription-key
+      in: query
+security:
+  - apiKeyHeader: [ ]
+  - apiKeyQuery: [ ]

@@ -1,0 +1,110 @@
+openapi: 3.0.1
+info:
+  title: Asset List API
+  description: Get Asset List Report
+  version: v1
+servers:
+  - url: https://apimgw.aeso.ca/public/assetlist-api/v1
+  - url: https://gateway-apim.aeso.ca/public/assetlist-api/v1
+paths:
+  /assetlist:
+    get:
+      tags:
+        - Asset List API
+      summary: Fetch the latest list of assets connected to AIES.
+      description: " The asset_ID and pool_participant_ID parameters are comma separated lists. At most, one of the two parameters can be passed in an API call.\n\nNote: The Operating Status, Pool Participant Name and ID for an asset can change overtime."
+      operationId: getAssetListData
+      parameters:
+        - name: asset_ID
+          in: query
+          description: This parameter can contain up to 20 comma-separated Asset IDs.
+          schema:
+            type: string
+        - name: pool_participant_ID
+          in: query
+          description: This parameter can contain up to 20 comma-separated Pool Participant IDs.
+          schema:
+            type: string
+        - name: operating_status
+          in: query
+          description: 'The allowed values are ACTIVE, RETIRED, SUSPENDED, INACTIVE'
+          schema:
+            type: string
+            default: ALL
+        - name: asset_type
+          in: query
+          description: 'The allowed values are SOURCE, SINK'
+          schema:
+            type: string
+            default: ALL
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetListVO'
+              example:
+                asset_name: string
+                asset_ID: string
+                asset_type: string
+                operating_status: string
+                pool_participant_name: string
+                pool_participant_ID: string
+                net_to_grid_asset_flag: string
+                asset_incl_storage_flag: string
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+        '405':
+          description: Invalid method
+        '500':
+          description: Internal server error
+        '503':
+          description: Service unavailable
+components:
+  schemas:
+    AssetListVO:
+      type: object
+      properties:
+        asset_name:
+          type: string
+          description: The name of the asset.
+        asset_ID:
+          type: string
+          description: Asset's unique short name defined by 3 or 4-digit alphanumeric code. A pool asset is registered to a pool participant.
+        asset_type:
+          type: string
+          description: Type of the asset - Sink or Source.
+        operating_status:
+          type: string
+          description: 'Operating status of the asset - Active, Retired, Inactive or Suspended.'
+        pool_participant_name:
+          type: string
+          description: Pool Participant_name is the name of the pool participant provided by the pool participant. A pool participant is a market participant who is registered to transact electric energy.
+        pool_participant_ID:
+          type: string
+          description: 'Pool Participant''s unique short name defined by 3 or 4-digit alphanumeric code. A pool participant is a market participant who is registered to transact electric energy. '
+        net_to_grid_asset_flag:
+          type: string
+          description: "Boolean value 'Y' or blank \r\nY = This asset is a Net-to-grid (NTG) asset\r\nBlank = This asset is  Gross-to-grid (GTG) asset"
+        asset_incl_storage_flag:
+          type: string
+          description: "Boolean value 'Y' or blank \r\nY = This asset includes energy storage\r\nBlank = This asset does not include energy storage"
+  securitySchemes:
+    apiKeyHeader:
+      type: apiKey
+      name: API-KEY
+      in: header
+    apiKeyQuery:
+      type: apiKey
+      name: subscription-key
+      in: query
+security:
+  - apiKeyHeader: [ ]
+  - apiKeyQuery: [ ]

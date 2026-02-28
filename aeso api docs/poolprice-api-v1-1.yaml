@@ -1,0 +1,97 @@
+openapi: 3.0.1
+info:
+  title: Pool Price Report
+  description: Pool Price report data
+  version: v1.1
+servers:
+  - url: https://apimgw.aeso.ca/public/poolprice-api/v1.1
+  - url: https://gateway-apim.aeso.ca/public/poolprice-api/v1.1
+paths:
+  /price/poolPrice:
+    get:
+      tags:
+        - Pool Price Report
+      summary: Fetch pool price report for a given date range
+      description: "Fetch pool price report for the date range: startDate (yyyy-mm-dd) to endDate (yyyy-mm-dd). The endDate is optional. If endDate is omitted, fetched data will include the pool price values for all the completed settlement hours of the day specified by startDate.\r\n\r\nTo fetch the latest pool price, include the date of that hour in your query.\r\n\r\n \r\n\r\nThe API will return data for a maximum of 1 year at a time."
+      operationId: getPoolPriceDateRangeReport
+      parameters:
+        - name: startDate
+          in: query
+          description: 'Any date between 2000-01-01 and current date.  (format: yyyy-MM-dd).'
+          required: true
+          schema:
+            pattern: '^\d{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$'
+            type: string
+        - name: endDate
+          in: query
+          description: 'Any date up to current date but after startDate. If left blank, only data for startDate will be returned. (format: yyyy-MM-dd).'
+          schema:
+            pattern: '^\d{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$'
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketPriceDemandDataReport'
+              example:
+                Pool Price Report:
+                  - begin_datetime_utc: string
+                    begin_datetime_mpt: string
+                    pool_price: string
+                    forecast_pool_price: string
+                    rolling_30day_avg: string
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+        '405':
+          description: Invalid method
+        '500':
+          description: Internal server error
+        '503':
+          description: Service unavailable
+components:
+  schemas:
+    MarketPriceDemandDataReport:
+      type: object
+      properties:
+        Pool Price Report:
+          type: array
+          items:
+            $ref: '#/components/schemas/MarketPriceDemandDataVO'
+    MarketPriceDemandDataVO:
+      type: object
+      properties:
+        begin_datetime_utc:
+          type: string
+          description: 'The begin timestamp of the settlement hour, in UTC.'
+        begin_datetime_mpt:
+          type: string
+          description: 'The begin timestamp of the settlement hour, in MPT (Mountain Prevailing Time) '
+        pool_price:
+          type: string
+          description: 'The Pool Price for the settlement hour, in CAD.'
+        forecast_pool_price:
+          type: string
+          description: 'The Forecasted Pool Price for the settlement hour, in CAD.'
+        rolling_30day_avg:
+          type: string
+          description: 'The 30-day rolling average price for the settlement hour, in CAD.'
+  securitySchemes:
+    apiKeyHeader:
+      type: apiKey
+      name: API-KEY
+      in: header
+    apiKeyQuery:
+      type: apiKey
+      name: subscription-key
+      in: query
+security:
+  - apiKeyHeader: [ ]
+  - apiKeyQuery: [ ]

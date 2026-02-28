@@ -1,0 +1,682 @@
+openapi: 3.0.1
+info:
+  title: Intertie Public Reports
+  description: Intertie Public Reports
+  contact:
+    name: ITC Support
+    url: http://itc.aeso.ca/
+    email: info@aeso.ca
+  version: v1
+servers:
+  - url: https://apimgw.aeso.ca/public/itc/v1
+  - url: https://gateway-apim.aeso.ca/public/itc/v1
+paths:
+  /outage:
+    get:
+      tags:
+        - Interchange Outage Report
+      summary: Fetch all the outages affecting TTCs on interties/flowgates
+      description: Fetches 13 months of data at a time. The data is available after 09 Nov 2020.
+      operationId: getOutages
+      parameters:
+        - name: startDate
+          in: query
+          description: 'Pass any date in history or future with format: yyyyMMdd e.g. 12Aug2020 will be 20200812. Fetches 13 months of data at a time. The data is available after 09 Nov 2020.'
+          required: true
+          schema:
+            type: string
+            description: As Of Date
+        - name: endDate
+          in: query
+          description: 'Pass any date equal to or after startDate with format: yyyyMMdd e.g. 12Aug2020 will be 20200812. Fetches 13 months of data at a time. The data is available after 09 Nov 2020.'
+          required: true
+          schema:
+            type: string
+            description: As Of Date
+        - name: affectedIntertieOrFlowgate
+          in: query
+          description: "Pass one value. No selection or '--' will select all interties and flowgates by default. \n\n_Available values_: BC, MATL, SK, BC_MATL"
+          schema:
+            enum:
+              - BC
+              - MATL
+              - SK
+              - BC_MATL
+            type: string
+            description: start
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OutagesReport'
+              example:
+                Outages:
+                  Outage:
+                    - element: string
+                      affectedIntertieOrFlowgate:
+                        - BC
+                      toInLocalTime: string
+                      fromInLocalTime: string
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/OutagesReport'
+              example: <OutagesReport> <Outages> <Outage> <element>string</element> <affectedIntertieOrFlowgate>BC</affectedIntertieOrFlowgate> <toInLocalTime>string</toInLocalTime> <fromInLocalTime>string</fromInLocalTime> </Outage> </Outages> </OutagesReport>
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+        '405':
+          description: Invalid method
+        '500':
+          description: Internal server error
+        '503':
+          description: Service unavailable
+  /interchange:
+    get:
+      tags:
+        - Interchange Capability Report
+      summary: Fetch Interchange Capability Report
+      description: 'For all the intertie related data, fetches 100 days of data at a time.'
+      operationId: getReportByRange
+      parameters:
+        - name: startDate
+          in: query
+          description: 'Pass any date in history or future with format: yyyyMMdd e.g. 12Aug2020 will be 20200812. Fetches 100 days of data at a time.'
+          required: true
+          schema:
+            type: string
+            description: Start date
+        - name: endDate
+          in: query
+          description: 'Pass any date equal to or after startDate with format: yyyyMMdd e.g. 12Aug2020 will be 20200812. Fetches 100 days of data at a time.'
+          required: true
+          schema:
+            type: string
+            description: end
+        - name: startHE
+          in: query
+          description: "Pass Hour Ending for start of the data \n\n_Available values_ : 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24\n\n_Default value_ : 1"
+          required: true
+          schema:
+            maximum: 24.0
+            minimum: 1.0
+            maxLength: 2
+            enum:
+              - 1
+              - 2
+              - 3
+              - 4
+              - 5
+              - 6
+              - 7
+              - 8
+              - 9
+              - 10
+              - 11
+              - 12
+              - 13
+              - 14
+              - 15
+              - 16
+              - 17
+              - 18
+              - 19
+              - 20
+              - 21
+              - 22
+              - 23
+              - 24
+            type: integer
+            description: HE
+            default: 1
+        - name: endHE
+          in: query
+          description: "Pass HE equal to or more than Start HE\n\n_Available values_ : 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24\n\n_Default value_ : 24"
+          required: true
+          schema:
+            maximum: 24.0
+            minimum: 1.0
+            maxLength: 2
+            enum:
+              - 1
+              - 2
+              - 3
+              - 4
+              - 5
+              - 6
+              - 7
+              - 8
+              - 9
+              - 10
+              - 11
+              - 12
+              - 13
+              - 14
+              - 15
+              - 16
+              - 17
+              - 18
+              - 19
+              - 20
+              - 21
+              - 22
+              - 23
+              - 24
+            type: integer
+            description: HE
+            default: 24
+        - name: version
+          in: query
+          description: "Pass true, to fetch all the data version changes made since 60mins before the start of the hour till the end of the hour. E.g. For HE11, when Version = true, it will fetch all versions of data from 9am till 11am.<br/>Pass false, to fetch only the latest version of the data at the end of the hour. Data could be Gross Offer, TTC, ATC, TRM_Total, TRM_System, TRM_Allocation or All, based on the selected dataType.\n\n_Default value_ : false"
+          required: true
+          schema:
+            type: boolean
+            description: Version
+            default: false
+        - name: dataType
+          in: query
+          description: "Pass one value. No selection or '--' will select all data types by default.\n\n_Available values_ : ATC, TTC, GROSS_OFFER, TRM_SYSTEM, TRM_ALLOCATION, TRM_TOTAL"
+          schema:
+            enum:
+              - ATC
+              - TTC
+              - GROSS_OFFER
+              - TRM_SYSTEM
+              - TRM_ALLOCATION
+              - TRM_TOTAL
+            type: string
+            description: start
+        - name: intertieOrFlowgate
+          in: query
+          description: "Pass one value. No selection or '--' will select all interties and flowgates by default.\n\n_Available values_ :  BC, SK, MATL, BC_MATL, SYSTEM"
+          schema:
+            enum:
+              - BC
+              - SK
+              - MATL
+              - BC_MATL
+              - SYSTEM
+            type: string
+            description: start
+        - name: transferType
+          in: query
+          description: "Pass one value. No selection or '--' will select both transfer types by default.\n\n_Available values_ : IMPORT, EXPORT"
+          schema:
+            enum:
+              - IMPORT
+              - EXPORT
+            type: string
+            description: start
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterchangeReport'
+              example:
+                BcIntertie:
+                  Allocations:
+                    - flowgate: true
+                      date: string
+                      he: string
+                      import:
+                        transferType: string
+                        reason: string
+                        atc: 0
+                        trmTotal: 0
+                        ttc: 0
+                        trmSystem: 0
+                        trmAllocation: 0
+                        grossOffer: 0
+                        version:
+                          - reason: string
+                            atc: 0
+                            trmTotal: 0
+                            ttc: 0
+                            trmSystem: 0
+                            trmAllocation: 0
+                            grossOffer: 0
+                            versionUpdatedLocaltime: string
+                        updatedLocalTime: string
+                        effectiveLocalTime: string
+                      export:
+                        transferType: string
+                        reason: string
+                        atc: 0
+                        trmTotal: 0
+                        ttc: 0
+                        trmSystem: 0
+                        trmAllocation: 0
+                        grossOffer: 0
+                        version:
+                          - reason: string
+                            atc: 0
+                            trmTotal: 0
+                            ttc: 0
+                            trmSystem: 0
+                            trmAllocation: 0
+                            grossOffer: 0
+                            versionUpdatedLocaltime: string
+                        updatedLocalTime: string
+                        effectiveLocalTime: string
+                MatlIntertie:
+                  Allocations:
+                    - flowgate: true
+                      date: string
+                      he: string
+                      import:
+                        transferType: string
+                        reason: string
+                        atc: 0
+                        trmTotal: 0
+                        ttc: 0
+                        trmSystem: 0
+                        trmAllocation: 0
+                        grossOffer: 0
+                        version:
+                          - reason: string
+                            atc: 0
+                            trmTotal: 0
+                            ttc: 0
+                            trmSystem: 0
+                            trmAllocation: 0
+                            grossOffer: 0
+                            versionUpdatedLocaltime: string
+                        updatedLocalTime: string
+                        effectiveLocalTime: string
+                      export:
+                        transferType: string
+                        reason: string
+                        atc: 0
+                        trmTotal: 0
+                        ttc: 0
+                        trmSystem: 0
+                        trmAllocation: 0
+                        grossOffer: 0
+                        version:
+                          - reason: string
+                            atc: 0
+                            trmTotal: 0
+                            ttc: 0
+                            trmSystem: 0
+                            trmAllocation: 0
+                            grossOffer: 0
+                            versionUpdatedLocaltime: string
+                        updatedLocalTime: string
+                        effectiveLocalTime: string
+                SkIntertie:
+                  Allocations:
+                    - flowgate: true
+                      date: string
+                      he: string
+                      import:
+                        transferType: string
+                        reason: string
+                        atc: 0
+                        trmTotal: 0
+                        ttc: 0
+                        trmSystem: 0
+                        trmAllocation: 0
+                        grossOffer: 0
+                        version:
+                          - reason: string
+                            atc: 0
+                            trmTotal: 0
+                            ttc: 0
+                            trmSystem: 0
+                            trmAllocation: 0
+                            grossOffer: 0
+                            versionUpdatedLocaltime: string
+                        updatedLocalTime: string
+                        effectiveLocalTime: string
+                      export:
+                        transferType: string
+                        reason: string
+                        atc: 0
+                        trmTotal: 0
+                        ttc: 0
+                        trmSystem: 0
+                        trmAllocation: 0
+                        grossOffer: 0
+                        version:
+                          - reason: string
+                            atc: 0
+                            trmTotal: 0
+                            ttc: 0
+                            trmSystem: 0
+                            trmAllocation: 0
+                            grossOffer: 0
+                            versionUpdatedLocaltime: string
+                        updatedLocalTime: string
+                        effectiveLocalTime: string
+                BcMatlFlowgate:
+                  links:
+                    - rel: string
+                      href: string
+                      hreflang: string
+                      media: string
+                      title: string
+                      type: string
+                      deprecation: string
+                  Allocations:
+                    - flowgate: true
+                      date: string
+                      he: string
+                      import:
+                        transferType: string
+                        reason: string
+                        atc: 0
+                        trmTotal: 0
+                        ttc: 0
+                        trmSystem: 0
+                        trmAllocation: 0
+                        grossOffer: 0
+                        version:
+                          - reason: string
+                            atc: 0
+                            trmTotal: 0
+                            ttc: 0
+                            trmSystem: 0
+                            trmAllocation: 0
+                            grossOffer: 0
+                            versionUpdatedLocaltime: string
+                        updatedLocalTime: string
+                        effectiveLocalTime: string
+                      export:
+                        transferType: string
+                        reason: string
+                        atc: 0
+                        trmTotal: 0
+                        ttc: 0
+                        trmSystem: 0
+                        trmAllocation: 0
+                        grossOffer: 0
+                        version:
+                          - reason: string
+                            atc: 0
+                            trmTotal: 0
+                            ttc: 0
+                            trmSystem: 0
+                            trmAllocation: 0
+                            grossOffer: 0
+                            versionUpdatedLocaltime: string
+                        updatedLocalTime: string
+                        effectiveLocalTime: string
+                SystemlFlowgate:
+                  links:
+                    - rel: string
+                      href: string
+                      hreflang: string
+                      media: string
+                      title: string
+                      type: string
+                      deprecation: string
+                  Allocations:
+                    - flowgate: true
+                      date: string
+                      he: string
+                      import:
+                        transferType: string
+                        reason: string
+                        atc: 0
+                        trmTotal: 0
+                        ttc: 0
+                        trmSystem: 0
+                        trmAllocation: 0
+                        grossOffer: 0
+                        version:
+                          - reason: string
+                            atc: 0
+                            trmTotal: 0
+                            ttc: 0
+                            trmSystem: 0
+                            trmAllocation: 0
+                            grossOffer: 0
+                            versionUpdatedLocaltime: string
+                        updatedLocalTime: string
+                        effectiveLocalTime: string
+                      export:
+                        transferType: string
+                        reason: string
+                        atc: 0
+                        trmTotal: 0
+                        ttc: 0
+                        trmSystem: 0
+                        trmAllocation: 0
+                        grossOffer: 0
+                        version:
+                          - reason: string
+                            atc: 0
+                            trmTotal: 0
+                            ttc: 0
+                            trmSystem: 0
+                            trmAllocation: 0
+                            grossOffer: 0
+                            versionUpdatedLocaltime: string
+                        updatedLocalTime: string
+                        effectiveLocalTime: string
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/InterchangeReport'
+              example: <InterchangeReport> <BcIntertie> <Allocations> <flowgate>true</flowgate> <date>string</date> <he>string</he> <import> <transferType>string</transferType> <reason>string</reason> <atc>0</atc> <trmTotal>0</trmTotal> <ttc>0</ttc> <trmSystem>0</trmSystem> <trmAllocation>0</trmAllocation> <grossOffer>0</grossOffer> <version> <reason>string</reason> <atc>0</atc> <trmTotal>0</trmTotal> <ttc>0</ttc> <trmSystem>0</trmSystem> <trmAllocation>0</trmAllocation> <grossOffer>0</grossOffer> <versionUpdatedLocaltime>string</versionUpdatedLocaltime> </version> <updatedLocalTime>string</updatedLocalTime> <effectiveLocalTime>string</effectiveLocalTime> </import> <export> <transferType>string</transferType> <reason>string</reason> <atc>0</atc> <trmTotal>0</trmTotal> <ttc>0</ttc> <trmSystem>0</trmSystem> <trmAllocation>0</trmAllocation> <grossOffer>0</grossOffer> <version> <reason>string</reason> <atc>0</atc> <trmTotal>0</trmTotal> <ttc>0</ttc> <trmSystem>0</trmSystem> <trmAllocation>0</trmAllocation> <grossOffer>0</grossOffer> <versionUpdatedLocaltime>string</versionUpdatedLocaltime> </version> <updatedLocalTime>string</updatedLocalTime> <effectiveLocalTime>string</effectiveLocalTime> </export> </Allocations> </BcIntertie> <MatlIntertie> <Allocations> <flowgate>true</flowgate> <date>string</date> <he>string</he> <import> <transferType>string</transferType> <reason>string</reason> <atc>0</atc> <trmTotal>0</trmTotal> <ttc>0</ttc> <trmSystem>0</trmSystem> <trmAllocation>0</trmAllocation> <grossOffer>0</grossOffer> <version> <reason>string</reason> <atc>0</atc> <trmTotal>0</trmTotal> <ttc>0</ttc> <trmSystem>0</trmSystem> <trmAllocation>0</trmAllocation> <grossOffer>0</grossOffer> <versionUpdatedLocaltime>string</versionUpdatedLocaltime> </version> <updatedLocalTime>string</updatedLocalTime> <effectiveLocalTime>string</effectiveLocalTime> </import> <export> <transferType>string</transferType> <reason>string</reason> <atc>0</atc> <trmTotal>0</trmTotal> <ttc>0</ttc> <trmSystem>0</trmSystem> <trmAllocation>0</trmAllocation> <grossOffer>0</grossOffer> <version> <reason>string</reason> <atc>0</atc> <trmTotal>0</trmTotal> <ttc>0</ttc> <trmSystem>0</trmSystem> <trmAllocation>0</trmAllocation> <grossOffer>0</grossOffer> <versionUpdatedLocaltime>string</versionUpdatedLocaltime> </version> <updatedLocalTime>string</updatedLocalTime> <effectiveLocalTime>string</effectiveLocalTime> </export> </Allocations> </MatlIntertie> <SkIntertie> <Allocations> <flowgate>true</flowgate> <date>string</date> <he>string</he> <import> <transferType>string</transferType> <reason>string</reason> <atc>0</atc> <trmTotal>0</trmTotal> <ttc>0</ttc> <trmSystem>0</trmSystem> <trmAllocation>0</trmAllocation> <grossOffer>0</grossOffer> <version> <reason>string</reason> <atc>0</atc> <trmTotal>0</trmTotal> <ttc>0</ttc> <trmSystem>0</trmSystem> <trmAllocation>0</trmAllocation> <grossOffer>0</grossOffer> <versionUpdatedLocaltime>string</versionUpdatedLocaltime> </version> <updatedLocalTime>string</updatedLocalTime> <effectiveLocalTime>string</effectiveLocalTime> </import> <export> <transferType>string</transferType> <reason>string</reason> <atc>0</atc> <trmTotal>0</trmTotal> <ttc>0</ttc> <trmSystem>0</trmSystem> <trmAllocation>0</trmAllocation> <grossOffer>0</grossOffer> <version> <reason>string</reason> <atc>0</atc> <trmTotal>0</trmTotal> <ttc>0</ttc> <trmSystem>0</trmSystem> <trmAllocation>0</trmAllocation> <grossOffer>0</grossOffer> <versionUpdatedLocaltime>string</versionUpdatedLocaltime> </version> <updatedLocalTime>string</updatedLocalTime> <effectiveLocalTime>string</effectiveLocalTime> </export> </Allocations> </SkIntertie> <BcMatlFlowgate> <link rel="string" href="string" hreflang="string" media="string" title="string" type="string" deprecation="string" /> <Allocations> <flowgate>true</flowgate> <date>string</date> <he>string</he> <import> <transferType>string</transferType> <reason>string</reason> <atc>0</atc> <trmTotal>0</trmTotal> <ttc>0</ttc> <trmSystem>0</trmSystem> <trmAllocation>0</trmAllocation> <grossOffer>0</grossOffer> <version> <reason>string</reason> <atc>0</atc> <trmTotal>0</trmTotal> <ttc>0</ttc> <trmSystem>0</trmSystem> <trmAllocation>0</trmAllocation> <grossOffer>0</grossOffer> <versionUpdatedLocaltime>string</versionUpdatedLocaltime> </version> <updatedLocalTime>string</updatedLocalTime> <effectiveLocalTime>string</effectiveLocalTime> </import> <export> <transferType>string</transferType> <reason>string</reason> <atc>0</atc> <trmTotal>0</trmTotal> <ttc>0</ttc> <trmSystem>0</trmSystem> <trmAllocation>0</trmAllocation> <grossOffer>0</grossOffer> <version> <reason>string</reason> <atc>0</atc> <trmTotal>0</trmTotal> <ttc>0</ttc> <trmSystem>0</trmSystem> <trmAllocation>0</trmAllocation> <grossOffer>0</grossOffer> <versionUpdatedLocaltime>string</versionUpdatedLocaltime> </version> <updatedLocalTime>string</updatedLocalTime> <effectiveLocalTime>string</effectiveLocalTime> </export> </Allocations> </BcMatlFlowgate> <SystemlFlowgate> <link rel="string" href="string" hreflang="string" media="string" title="string" type="string" deprecation="string" /> <Allocations> <flowgate>true</flowgate> <date>string</date> <he>string</he> <import> <transferType>string</transferType> <reason>string</reason> <atc>0</atc> <trmTotal>0</trmTotal> <ttc>0</ttc> <trmSystem>0</trmSystem> <trmAllocation>0</trmAllocation> <grossOffer>0</grossOffer> <version> <reason>string</reason> <atc>0</atc> <trmTotal>0</trmTotal> <ttc>0</ttc> <trmSystem>0</trmSystem> <trmAllocation>0</trmAllocation> <grossOffer>0</grossOffer> <versionUpdatedLocaltime>string</versionUpdatedLocaltime> </version> <updatedLocalTime>string</updatedLocalTime> <effectiveLocalTime>string</effectiveLocalTime> </import> <export> <transferType>string</transferType> <reason>string</reason> <atc>0</atc> <trmTotal>0</trmTotal> <ttc>0</ttc> <trmSystem>0</trmSystem> <trmAllocation>0</trmAllocation> <grossOffer>0</grossOffer> <version> <reason>string</reason> <atc>0</atc> <trmTotal>0</trmTotal> <ttc>0</ttc> <trmSystem>0</trmSystem> <trmAllocation>0</trmAllocation> <grossOffer>0</grossOffer> <versionUpdatedLocaltime>string</versionUpdatedLocaltime> </version> <updatedLocalTime>string</updatedLocalTime> <effectiveLocalTime>string</effectiveLocalTime> </export> </Allocations> </SystemlFlowgate> </InterchangeReport>
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+        '405':
+          description: Invalid method
+        '500':
+          description: Internal server error
+        '503':
+          description: Service unavailable
+components:
+  schemas:
+    OutageReport:
+      type: object
+      properties:
+        Outage:
+          type: array
+          items:
+            $ref: '#/components/schemas/OutageVO'
+    OutageVO:
+      type: object
+      properties:
+        element:
+          type: string
+        affectedIntertieOrFlowgate:
+          uniqueItems: true
+          type: array
+          items:
+            enum:
+              - BC
+              - MATL
+              - BC_MATL
+              - SK
+              - SKEXP
+              - NA
+            type: string
+        toInLocalTime:
+          type: string
+        fromInLocalTime:
+          type: string
+    OutagesReport:
+      type: object
+      properties:
+        Outages:
+          $ref: '#/components/schemas/OutageReport'
+    FlowGateTransferReport:
+      type: object
+      properties:
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/Link'
+          xml:
+            name: link
+            namespace: http://www.w3.org/2005/Atom
+        Allocations:
+          uniqueItems: true
+          type: array
+          items:
+            $ref: '#/components/schemas/IntertieData'
+    ITCExportReport:
+      type: object
+      properties:
+        transferType:
+          type: string
+        reason:
+          type: string
+        atc:
+          type: number
+        trmTotal:
+          type: number
+        ttc:
+          type: number
+        trmSystem:
+          type: number
+        trmAllocation:
+          type: number
+        grossOffer:
+          type: number
+        version:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransferDataVersion'
+        updatedLocalTime:
+          type: string
+        effectiveLocalTime:
+          type: string
+    ITCImportReport:
+      type: object
+      properties:
+        transferType:
+          type: string
+        reason:
+          type: string
+        atc:
+          type: number
+        trmTotal:
+          type: number
+        ttc:
+          type: number
+        trmSystem:
+          type: number
+        trmAllocation:
+          type: number
+        grossOffer:
+          type: number
+        version:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransferDataVersion'
+        updatedLocalTime:
+          type: string
+        effectiveLocalTime:
+          type: string
+    InterchangeReport:
+      type: object
+      properties:
+        BcIntertie:
+          $ref: '#/components/schemas/IntertieTransferReport'
+        MatlIntertie:
+          $ref: '#/components/schemas/IntertieTransferReport'
+        SkIntertie:
+          $ref: '#/components/schemas/IntertieTransferReport'
+        BcMatlFlowgate:
+          $ref: '#/components/schemas/FlowGateTransferReport'
+        SystemlFlowgate:
+          $ref: '#/components/schemas/FlowGateTransferReport'
+    IntertieData:
+      type: object
+      properties:
+        flowgate:
+          type: boolean
+        date:
+          type: string
+        he:
+          type: string
+        import:
+          $ref: '#/components/schemas/ITCImportReport'
+        export:
+          $ref: '#/components/schemas/ITCExportReport'
+    IntertieTransferReport:
+      type: object
+      properties:
+        Allocations:
+          uniqueItems: true
+          type: array
+          items:
+            $ref: '#/components/schemas/IntertieData'
+    Link:
+      type: object
+      properties:
+        rel:
+          type: string
+          xml:
+            attribute: true
+        href:
+          type: string
+          xml:
+            attribute: true
+        hreflang:
+          type: string
+          xml:
+            attribute: true
+        media:
+          type: string
+          xml:
+            attribute: true
+        title:
+          type: string
+          xml:
+            attribute: true
+        type:
+          type: string
+          xml:
+            attribute: true
+        deprecation:
+          type: string
+          xml:
+            attribute: true
+    TransferDataVersion:
+      type: object
+      properties:
+        reason:
+          type: string
+        atc:
+          type: number
+        trmTotal:
+          type: number
+        ttc:
+          type: number
+        trmSystem:
+          type: number
+        trmAllocation:
+          type: number
+        grossOffer:
+          type: number
+        versionUpdatedLocaltime:
+          type: string
+  securitySchemes:
+    apiKeyHeader:
+      type: apiKey
+      name: API-KEY
+      in: header
+    apiKeyQuery:
+      type: apiKey
+      name: subscription-key
+      in: query
+security:
+  - apiKeyHeader: [ ]
+  - apiKeyQuery: [ ]

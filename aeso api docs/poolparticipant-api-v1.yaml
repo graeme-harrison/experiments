@@ -1,0 +1,94 @@
+openapi: 3.0.1
+info:
+  title: Pool Participant API
+  description: Fetch the latest list of pool participants operating in AIES
+  version: v1
+servers:
+  - url: https://apimgw.aeso.ca/public/PoolParticipant-api/v1
+  - url: https://gateway-apim.aeso.ca/public/PoolParticipant-api/v1
+paths:
+  /poolparticipantlist:
+    get:
+      tags:
+        - Pool Participant API
+      summary: 'Fetch the latest list of pool participants operating in AIES. '
+      description: Fetch the latest list of pool participants operating in AIES
+      operationId: getPoolParticipantListData
+      parameters:
+        - name: pool_participant_ID
+          in: query
+          description: This parameter can contain up to 20 comma-separated Pool Participant IDs.
+          schema:
+            type: string
+        - name: pool_participant_name
+          in: query
+          description: All names that contain the provided string will be returned. The search is case-sensitive.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PoolParticipantVO'
+              example:
+                pool_participant_name: string
+                pool_participant_ID: string
+                corporate_contact: string
+                agent_list:
+                  - agent_ID: string
+                    agent_name: string
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+        '405':
+          description: Invalid method
+        '500':
+          description: Internal server error
+        '503':
+          description: Service unavailable
+components:
+  schemas:
+    AgentsInfo:
+      type: object
+      properties:
+        agent_ID:
+          type: string
+          description: Unique shortname of the agent company. It is a 3 or 4-digit alphanumeric code.
+        agent_name:
+          type: string
+          description: 'Name of the agent company - A representative of a market participant or a pool participant, as the case may be, duly appointed and authorized to act on their behalf. '
+    PoolParticipantVO:
+      type: object
+      properties:
+        pool_participant_name:
+          type: string
+          description: 'Pool Participant_name is the name of the pool participant provided by the pool participant. A pool participant is a market participant who is registered to transact electric energy. '
+        pool_participant_ID:
+          type: string
+          description: 'Pool Participant''s unique short name defined by 3 or 4-digit alphanumeric code. A pool participant is a market participant who is registered to transact electric energy. '
+        corporate_contact:
+          type: string
+          description: 'Corporate contact details of the Pool Participant - address, phone no., fax no. and contact person''s name.'
+        agent_list:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentsInfo'
+  securitySchemes:
+    apiKeyHeader:
+      type: apiKey
+      name: API-KEY
+      in: header
+    apiKeyQuery:
+      type: apiKey
+      name: subscription-key
+      in: query
+security:
+  - apiKeyHeader: [ ]
+  - apiKeyQuery: [ ]
