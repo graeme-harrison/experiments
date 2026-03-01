@@ -1,0 +1,9 @@
+{
+  "_meta": "Optional coordinate overrides by AESO asset ID. Format: { \"ASSET_ID\": { \"lat\": 53.12345, \"lng\": -113.12345 } }",
+  "_example": {
+    "ABC1": {
+      "lat": 53.12345,
+      "lng": -113.12345
+    }
+  }
+}

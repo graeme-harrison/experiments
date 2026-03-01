@@ -1,1 +1,99 @@
-experiments
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Experiments Workspace</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f8f7f1;
+        --ink: #1d2332;
+        --panel: #ffffff;
+        --border: #d5d9e3;
+        --accent: #1776f2;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+        color: var(--ink);
+        background: radial-gradient(circle at 10% 10%, #f5ead8 0%, transparent 46%),
+          radial-gradient(circle at 90% 20%, #dbe9ff 0%, transparent 35%),
+          var(--bg);
+        display: grid;
+        place-items: center;
+        padding: 24px;
+      }
+
+      main {
+        width: min(900px, 100%);
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 28px;
+        box-shadow: 0 16px 40px rgba(20, 37, 66, 0.1);
+      }
+
+      h1 {
+        margin: 0 0 10px;
+        font-size: clamp(1.5rem, 2.5vw, 2.3rem);
+      }
+
+      p {
+        margin: 0 0 20px;
+        color: #4f5c70;
+      }
+
+      .experiment {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 16px;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        margin-bottom: 12px;
+        align-items: center;
+      }
+
+      .experiment h2 {
+        margin: 0 0 6px;
+        font-size: 1.1rem;
+      }
+
+      .experiment p {
+        margin: 0;
+        font-size: 0.95rem;
+      }
+
+      .experiment a {
+        text-decoration: none;
+        color: #fff;
+        background: var(--accent);
+        padding: 10px 14px;
+        border-radius: 10px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Experiments Workspace</h1>
+      <p>Each experiment lives in its own subfolder. Start with experiment 01 below.</p>
+
+      <div class="experiment">
+        <div>
+          <h2>01. AESO Generator Status Map</h2>
+          <p>Live Alberta generator status map built from AESO APIs.</p>
+        </div>
+        <a href="./01-aeso-generator-map/">Open</a>
+      </div>
+    </main>
+  </body>
+</html>

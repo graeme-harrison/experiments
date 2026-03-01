@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AESO Generator Status Map</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="backdrop" aria-hidden="true"></div>
+
+    <main class="app-shell">
+      <header class="hero">
+        <p class="eyebrow">Experiment 01</p>
+        <h1>AESO Generator Status Map</h1>
+        <p>
+          Live source-asset status from AESO. Map markers are shown only for assets with
+          trusted coordinates from AESO payload fields or `data/asset-coordinates.json` overrides.
+        </p>
+      </header>
+
+      <section class="control-grid">
+        <label>
+          AESO API key
+          <input id="apiKeyInput" type="text" spellcheck="false" autocomplete="off" />
+        </label>
+
+        <label>
+          API host
+          <select id="apiHostSelect">
+            <option value="/aeso-apimgw">nginx proxy -> apimgw.aeso.ca (recommended)</option>
+            <option value="/aeso">nginx proxy -> gateway-apim.aeso.ca</option>
+            <option value="https://gateway-apim.aeso.ca/public">direct -> gateway-apim.aeso.ca</option>
+            <option value="https://apimgw.aeso.ca/public">direct -> apimgw.aeso.ca</option>
+          </select>
+        </label>
+
+        <label class="toggle">
+          <span>Auto-refresh (60s)</span>
+          <input id="autoRefreshToggle" type="checkbox" />
+        </label>
+
+        <button id="loadButton" type="button">Load Live Data</button>
+      </section>
+
+      <section class="runtime-row">
+        <p id="runtimeMessage" class="pill">Waiting to load data.</p>
+        <p id="lastUpdatedLabel" class="mono">No AESO data loaded yet.</p>
+      </section>
+
+      <section id="errorBanner" class="error-banner" hidden></section>
+
+      <section class="stat-grid" aria-label="Summary stats">
+        <article class="stat-card">
+          <h2>Total sources</h2>
+          <p id="statTotal">0</p>
+        </article>
+        <article class="stat-card">
+          <h2>Generating now</h2>
+          <p id="statGenerating">0</p>
+        </article>
+        <article class="stat-card">
+          <h2>Online at 0 MW</h2>
+          <p id="statZero">0</p>
+        </article>
+        <article class="stat-card">
+          <h2>No telemetry/offline</h2>
+          <p id="statOther">0</p>
+        </article>
+      </section>
+
+      <section class="workspace-grid">
+        <article class="panel map-panel">
+          <h2>Map</h2>
+          <div id="map" aria-label="Alberta generator map"></div>
+          <p class="note">
+            Status colors: generating (green), online at 0 MW (amber), no telemetry (orange), retired/inactive/suspended (slate). No-telemetry/offline assets are hidden by default.
+          </p>
+        </article>
+
+        <aside class="panel table-panel">
+          <h2>Generators</h2>
+
+          <div class="filters">
+            <input
+              id="searchInput"
+              type="search"
+              placeholder="Search asset ID, asset name, participant"
+              spellcheck="false"
+            />
+            <select id="statusFilter">
+              <option value="LIVE_ONLY">Live only (Generating + Online 0 MW)</option>
+              <option value="ALL">All statuses</option>
+            </select>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Asset</th>
+                  <th>Status</th>
+                  <th>MW</th>
+                </tr>
+              </thead>
+              <tbody id="assetTableBody">
+                <tr>
+                  <td colspan="3" class="placeholder">Load data to populate generator status.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+    <script type="module" src="./app.js?v=20260301-1"></script>
+  </body>
+</html>
